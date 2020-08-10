@@ -16,7 +16,8 @@ app.use(cors());
 app.use(helmet());
 
 app.get('/', (req,res) => {
-  res.status(200).send('Hello Boilerplate');
+  console.log(__dirname);
+  res.sendFile(__dirname + '/html-files/index.html');
 });
 
 app.use(function errorHandler(error,req,res,next){ //eslint-disable-line
