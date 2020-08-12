@@ -2,34 +2,38 @@ const app = require('./app');
 const { PORT, NODE_ENV } = require('./config');
 const http = require('http').createServer(app);
 const io = require('socket.io')(http);
+// const helper = require('helper.js')
 
 let users = {};
 
 io.on('connection', (socket) => {
   console.log('a user connected');
-  socket.broadcast.emit('userconnect', 'new user connected');
+  users[socket.id]=socket.id;
+  //emit usersList to other users
+  io.emit('userlist update', users);
+  socket.broadcast.emit('userconnect',`${users[socket.id]} connected`);
+
   socket.on('username save', (username) => {
     console.log(socket.id);
-    users[socket.id] = username;
-    socket.emit('username saved', `${users[socket.id]} saved`);
+    users[socket.id]=username;
+    //emit usersList with new username
+    io.emit('userlist update', users);
   });
   socket.on('disconnect', () => {
     io.emit('disconnect', 'user disconnected');
     console.log('user disconnected');
+    //delete user on disconnect
+    delete users[socket.id];
+    //emit usersList without deleted user
+    socket.broadcast.emit('userlist update', users)
   });
   socket.on('typing', (isTyping) => {
-      console.log(isTyping);
-      io.emit('typing', isTyping);
+    console.log(isTyping);
+    io.emit('typing', isTyping);
   })
 
   socket.on('chat message', (msg) => {
-    if (socket.id in users) { //if they have a username
-      socket.broadcast.emit('chat message', `${users[socket.id]}: ${msg}`);
-    } else { //if they don't have a username
-      users[socket.id] = socket.id;
-      socket.broadcast.emit('chat message', `${users[socket.id]}: ${msg}`);
-    }
-    console.log('message: ' + msg);
+    io.emit('chat message',`${users[socket.id]}: ${msg}`);
   });
 });
 
