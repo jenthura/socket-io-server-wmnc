@@ -17,6 +17,11 @@ io.on('connection', (socket) => {
     io.emit('disconnect', 'user disconnected');
     console.log('user disconnected');
   });
+  socket.on('typing', (isTyping) => {
+      console.log(isTyping);
+      io.emit('typing', isTyping);
+  })
+
   socket.on('chat message', (msg) => {
     if (socket.id in users) { //if they have a username
       socket.broadcast.emit('chat message', `${users[socket.id]}: ${msg}`);

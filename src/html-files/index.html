@@ -1,76 +1,86 @@
 <!doctype html>
 <html>
+  <head>
+    <title>Slackful</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font: 13px Helvetica, Arial; }
+      .chat { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
+      #typing { position: fixed; bottom: 50px; }
+      form input { border: 0; padding: 10px; width: 90%; margin-right: 0.5%; }
+      form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+      #messages { list-style-type: none; margin: 0; padding: 0; }
+      #messages li { padding: 5px 10px; }
+      #messages li:nth-child(odd) { background: #eee; }
+    </style>
+  </head>
+  <body>
+    <form id='username-save' action="">
+      <input id="u" autocomplete="off" /><button>Save Username</button>
+    </form>
+    <ul id="messages"></ul>
+    <form class='chat' id='chat' action="">
+      <input id="m" autocomplete="off" /><button>Send</button>
+    </form>
+    <div id="typing"></div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script>
+      $(function () {
+        var socket = io();
+        let isTyping = false;
+        let typingTimer;
 
-<head>
-  <title>Socket.IO chat</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+        $('#m').on('input', (e) => {
+          clearTimeout(typingTimer);
 
-    body {
-      font: 13px Helvetica, Arial;
-    }
+          if (!isTyping) {
+            isTyping = true;
+            socket.emit('typing', isTyping);
 
-    .chat {
-      background: #000;
-      padding: 3px;
-      position: fixed;
-      bottom: 0;
-      width: 100%;
-    }
+          }
 
-    form input {
-      border: 0;
-      padding: 10px;
-      width: 90%;
-      margin-right: 0.5%;
-    }
+          typingTimer = setTimeout(() => {
+            isTyping = false;
+            socket.emit('typing', isTyping);
+          }, 2000);
+        });
 
-    form button {
-      width: 9%;
-      background: rgb(130, 224, 255);
-      border: none;
-      padding: 10px;
-    }
+        $('#chat').submit(function(e) {
+          e.preventDefault(); // prevents page reloading
+          socket.emit('chat message', $('#m').val());
+          $('#m').val('');
+          return false;
+        });
 
-    #messages {
-      list-style-type: none;
-      margin: 0;
-      padding: 0;
-    }
+        $('#username-save').submit(function(e) {
+          e.preventDefault(); // prevents page reloading
+          socket.emit('username save', $('#u').val());
+          $('#u').val('');
+          return false;
+        });
 
-    #messages li {
-      padding: 5px 10px;
-    }
+        socket.on('username saved', function(msg){
+            $('#messages').append($('<li>').text(msg));
+        });
 
-    #messages li:nth-child(odd) {
-      background: #eee;
-    }
-  </style>
-</head>
-
-<body>
-  <form id='username-save' action="">
-    <input id="u" autocomplete="off" /><button>Save Username</button>
-  </form>
-  <ul id="messages"></ul>
-  <form class='chat' id='chat' action="">
-    <input id="m" autocomplete="off" /><button>Send</button>
-  </form>
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
-  <script>
-    $(function () {
-      var socket = io();
-      $('#chat').submit(function (e) {
-        e.preventDefault(); // prevents page reloading
-        socket.emit('chat message', $('#m').val());
-        $('#messages').append($('<li>').text($('#m').val()));
-        $('#m').val('');
-        return false;
+        socket.on('typing', function(typingBool){
+          $('#typing').html(
+            typingBool 
+            ? 'Someone is typing'              
+            : ''
+          );
+        })
+        
+        socket.on('chat message', function(msg){
+            $('#messages').append($('<li>').text(msg));
+        });
+        socket.on('disconnect', function(msg){
+            $('#messages').append($('<li>').text(msg));
+        });
+        socket.on('userconnect', function(msg){
+            $('#messages').append($('<li>').text(msg));
+        });
       });
 
       $('#username-save').submit(function (e) {
