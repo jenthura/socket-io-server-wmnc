@@ -83,6 +83,29 @@
         });
       });
 
-    </script>
-  </body>
+      $('#username-save').submit(function (e) {
+        e.preventDefault(); // prevents page reloading
+        socket.emit('username save', $('#u').val());
+        $('#u').val('');
+        return false;
+      });
+
+      socket.on('username saved', function (msg) {
+        $('#messages').append($('<li>').text(msg));
+      });
+
+      socket.on('chat message', function (msg) {
+        $('#messages').append($('<li>').text(msg));
+      });
+      socket.on('disconnect', function (msg) {
+        $('#messages').append($('<li>').text(msg));
+      });
+      socket.on('userconnect', function (msg) {
+        $('#messages').append($('<li>').text(msg));
+      });
+    });
+
+  </script>
+</body>
+
 </html>
