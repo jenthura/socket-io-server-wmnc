@@ -1,4 +1,4 @@
-# Slackful messaging app
+## Socket.io messaging app
 
 This is a messaging app built to learn socket.IO
 
