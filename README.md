@@ -1,4 +1,4 @@
-## Socket.io messaging app
+## Socket-chat
 
 This is a messaging app built to learn socket.IO
 
